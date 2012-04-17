@@ -15,17 +15,19 @@ my @ln=();
 print "Ok, let's start!\nClearing database\n";
 $dbi->delete_all(table=>'prod');
 
-say 'Get list of items...';
-$tx=$ua->get('http://video.wikimart.ru/camcoders/camcorder/?price[to]=6500&price[from]=2500&order=popularity')->res->dom;
+print 'Get list of items...';
+$tx=$ua->max_redirects(5)->get('http://video.wikimart.ru/camcoders/camcorder/?price[to]=6500&price[from]=2500&order=popularity'=>{DNT=>1})->res->dom;
 
 for my $l ($tx->find('.InfoModel a')->each){
 	push @ln, $l->attrs('href');
 }
-say "Ok\nStarting parse product pages: \n\n";
+say "Ok\nStarting parse product pages\n";
+my $allitems=@ln;
 my $n=0;
 foreach my $link(@ln){
-	say "Product #$n ";
-	$tx=$ua->get($link)->res->dom;
+	$n++;
+	print  "Product\t#$n\tfrom\t$allitems\t";
+	$tx=$ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
 	my %prod=();
 	
 	$prod{'link'}=$link;
@@ -57,6 +59,5 @@ foreach my $link(@ln){
 	#foreach my $key(keys %prod){
     #	say "$key=$prod{$key}";
 	#}
-	$n++;
 }
 
