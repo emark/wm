@@ -34,7 +34,7 @@ foreach my $key(@catalog){
 	chomp $key;
 	($topcat,$subcat,$urlcat,$pricefrom,$priceto,$orderby)=split(';',$key);
 
-	say "Top category: $topcat\nSubcategory: $subcat;";
+	say "Top category: $topcat\nSubcategory: $subcat";
 	$tx=$ua->max_redirects(5)->get("$urlcat?price[from]=$pricefrom&price[to]=$priceto&order=$orderby"=>{DNT=>1})->res->dom;
 
 	for my $l ($tx->find('.InfoModel a')->each){
