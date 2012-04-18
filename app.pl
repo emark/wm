@@ -14,9 +14,6 @@ my $catfile='catalog.qr';
 my @catalog=();#catalog list
 my $catcount=0;#count of catalog categories
 
-
-#&ParseProductCard('http://video.wikimart.ru/camcoders/camcorder/model/5840562/portativnaya_mini_videokamera_kodak_playsport_zx5/');
-
 print "Ok, let's start!\nClearing database\n";
 $dbi->delete_all(table=>'prod');
 
@@ -50,6 +47,9 @@ foreach my $key(@catalog){
 	}#foreach @ln
 }
 
+&GetImagePreview;
+say 'All done at '.localtime(time);
+
 sub ParseProductCard(){
 	my $link=$_[0];
 	$tx=$ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
@@ -63,6 +63,19 @@ sub ParseProductCard(){
 	$prod{'description'}='';
     for my $desc($tx->find('.description p')->each){$prod{'description'}=$prod{'description'}.$desc->text;}
     for my $count($tx->find('.Count')->each){$prod{'count'}=$count->text;}
-    say "data recording\n";
     $dbi->insert({topcat=>$topcat,subcat=>$subcat,link=>$prod{'link'},caption=>$prod{'caption'},image=>$prod{'image'},price=>$prod{'price'},description=>$prod{'description'},count=>$prod{'count'}},table=>'prod');
+	say 'Done.';
+}
+
+sub GetImagePreview(){
+	my $previewdir=time();
+	mkdir $previewdir;
+	chdir $previewdir;
+
+	my $result=$dbi->select(['id','image','count','description'],table=>'prod',where=>'length(image)>0 and length(count)>0 and length(description)>0');
+
+	while(my $row=$result->fetch_hash){
+    	say "Get preview image to id: $row->{'id'}";
+	    $tx=$ua->max_redirects(5)->get($row->{'image'}=>{DNT=>1})->res->content->asset->move_to($row->{'id'}.'.jpeg');
+	}
 }
