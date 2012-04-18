@@ -33,7 +33,7 @@ foreach my $key(@catalog){
 
 	say "Top category: $topcat\nSubcategory: $subcat";
 	$tx=$ua->max_redirects(5)->get("$urlcat?price[from]=$pricefrom&price[to]=$priceto&order=$orderby"=>{DNT=>1})->res->dom;
-
+	@ln=();#clear links array
 	for my $l ($tx->find('.InfoModel a')->each){
 		push @ln, $l->attrs('href');
 	}
