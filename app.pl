@@ -10,7 +10,7 @@ my $dbi=DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
 my $ua=Mojo::UserAgent->new();
 my $tx=Mojo::DOM->new();
 my @ln=();#product links from subcategory list
-my $catfile='catalog.qr';
+my $catfile='catalog.csv';
 my @catalog=();#catalog list
 my $catcount=0;#count of catalog categories
 
