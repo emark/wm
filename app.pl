@@ -72,8 +72,8 @@ sub GetNewProd(){
 			$n++;
 			print "Product #$n from $allitems. Category $c from $catcount. ";
 			my $result=$dbi->select(['id'],table=>'prod',where=>{link=>$link});
-			if($result){
-				my $row=$result->fetch;
+			my $row=$result->fetch;
+			if($row){
 				say "Link exist. id[$row->[0]]";				
 			}else{
 				&ParseProductCard(0,$link);
