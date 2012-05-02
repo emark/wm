@@ -6,18 +6,18 @@ use utf8;
 use v5.10;
 use DBIx::Custom;
 
-my $dbi=DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/test");
+my $dbi=DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
 my $ua=Mojo::UserAgent->new();
 my $tx=Mojo::DOM->new();
 my @ln=();#product links from subcategory list
-my $catfile='catalog.bak';
+my $catfile='catalog.csv';
 my @catalog=();#catalog list
 my $catcount=0;#count of catalog categories
 my $topcat;my $subcat;
 
 say "Ok, let's start. Now is ".localtime(time);
 
-#&UpdateCatalog;
+&UpdateCatalog;
 &GetNewProd;
 &GetImagePreview;
 
