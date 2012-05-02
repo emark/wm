@@ -3,7 +3,7 @@ use strict;
 use Mojo::UserAgent;
 use Mojo::DOM;
 use utf8;
-use v5.12;
+use v5.10;
 use DBIx::Custom;
 
 my $dbi=DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
@@ -13,9 +13,9 @@ my @ln=();#product links from subcategory list
 my $catfile='catalog.csv';
 my @catalog=();#catalog list
 my $catcount=0;#count of catalog categories
+my $timestamp=time();
 
-print "Ok, let's start!\nClearing database\n";
-$dbi->delete_all(table=>'prod');
+print "Ok, let's start!\n";
 
 say "Open catalog file: $catfile";
 open (CAT,"< $catfile") || die "Can't open $catfile file";
@@ -68,9 +68,7 @@ sub ParseProductCard(){
 }
 
 sub GetImagePreview(){
-	my $previewdir=time();
-	mkdir 'media/'.$previewdir;
-	chdir 'media/'.$previewdir;
+	chdir 'media/Products/';
 
 	my $result=$dbi->select(['id','image','count','description'],table=>'prod',where=>'length(image)>0 and length(count)>0 and length(description)>0');
 
