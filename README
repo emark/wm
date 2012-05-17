@@ -1,1 +1,10 @@
 WM parse
+Status code:
+0-Add new item
+1-Updated item
+2-Delete item
+3-Allow item
+
+How to use:
+1. Generate allowed items id
+2. Starting application
