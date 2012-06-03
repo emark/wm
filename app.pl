@@ -102,7 +102,7 @@ sub ParseProductCard(){
 		$properties=$properties.$key."=".$propvalue[$p]."; ";
 		$p++;
 	}
-	for my $count($tx->find('.Count')->each){$prod{'count'}=$count->text;}
+	for my $count($tx->find('p.Count')->each){$prod{'count'}=$count->text;}
 	if($id==0){
 		$dbi->insert({topcat=>$topcat,subcat=>$subcat,link=>$prod{'link'},caption=>$prod{'caption'},image=>$prod{'image'},price=>$prod{'price'},description=>$properties,count=>$prod{'count'},status=>0},table=>'prod');
 		say 'Insert';
