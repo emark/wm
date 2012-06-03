@@ -127,7 +127,7 @@ sub ParseProductCard(){
 }#sub ParseProductCard
 
 sub GetImagePreview(){
-	chdir 'media/Products/';
+	chdir 'media/ProductImage/';
 
 	my $result=$dbi->select(['id','image','count','description'],table=>'prod',where=>'length(image)>0 and length(count)>0 and length(description)>0 and status=0');
 
