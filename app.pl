@@ -18,8 +18,8 @@ my $topcat;my $subcat;
 say "Ok, let's start. Now is ".localtime(time);
 
 &UpdateCatalog;
-&GetNewProd;
-&GetImagePreview;
+#&GetNewProd;
+#&GetImagePreview;
 
 say 'All done at '.localtime(time);
 
