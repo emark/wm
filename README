@@ -6,5 +6,7 @@ Status code:
 3-Allow item
 
 How to use:
-1. Generate allowed items id
-2. Starting application
+1. Move files from media/products to media/temp
+2. Generate allowed items id from database to update.csv
+3. Start perl script
+
