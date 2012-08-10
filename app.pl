@@ -16,21 +16,45 @@ my @catalog=();#catalog list
 my $catcount=0;#count of catalog categories
 my $topcat;
 my $subcat;
+my @commands = (
+	'Quit',
+	'Update catalog (only)',
+	'Add new products (only)',
+	'Update and add products',
+	'Update products preview (only)',
+	'Download and update products preview',
+	'Parse by product id',
+);
 
 given (&SelectCmd){
 	when(1){
+		say "\nStarting to $commands[1]";
 		&UpdateCatalog;
-	}
-	when(2){
+		&CopyProductImage;
+	}when(2){
+		say "\nStarting to $commands[2]";
 		&GetNewProd;
-       	&GetImagePreview;
-	}
-	when(3){
+       	&DownloadProductImage;
+		&CopyProductImage;
+	}when(3){
+		say "\nStarting to $commands[3]";
 		&UpdateCatalog;
         &GetNewProd;
-        &GetImagePreview;
-	}
-	default {
+        &DownloadProductImage;
+        &CopyProductImage;
+	}when(4){
+        say "\nStarting to $commands[4]";
+        &CopyProductImage;
+    }when(5){
+		say "\nStarting to $commands[5]";
+        &DownloadProductImage;
+        &CopyProductImage;
+	}when(6){
+		say "\nStarting to $commands[6]";
+		print 'Enter product id: ';
+		my $id = <STDIN>;
+		&ParseProductCard($id) if $id;
+	}default {
 		say 'Buy!'
 	}
 };
@@ -39,7 +63,12 @@ say 'All done at '.localtime(time);
 
 sub SelectCmd(){
 	say 'NOTE! Before starting see README';
-	print "Select command:\n\t1. Update catalog (only)\n\t2. Add new products (only)\n\t3. Update and add products\n\t0. Quit\n\n";
+	say 'Select command:';
+	my $n = 0;
+	foreach my $key (@commands){
+		say "\t$n. $key";
+		$n++;
+	};
 	print "Your choise: ";
 	return <STDIN>;
 };
@@ -114,8 +143,21 @@ sub GetNewProd(){
 #Usage: ($id,$link)
 sub ParseProductCard(){
 	my $id = $_[0];
-	my $link = $_[1];
-	$tx=$ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
+	my $link = '';
+	#Development feature for parsing target product
+	if($_[1]){
+		$link = $_[1];
+	}else{
+		my $result = $dbi->select(
+			column => 'link',
+			table => 'prod',
+			where => {'id' => $id},
+		);
+		$link = $result->fetch->[0];
+	}
+
+	$tx = $ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
+	
 	my %prod = ();
 	$prod{'link'} = $link;
 	for my $c($tx->find('#information h1')->each){
@@ -133,6 +175,7 @@ sub ParseProductCard(){
 	for my $prop($tx->find('div.properties-group > dl.ui-helper-clearfix > dt > span')->each){
 		push @propname, $prop->text;
 	};
+
 	for my $prop($tx->find('div.properties-group > dl.ui-helper-clearfix > dd')->each){
 		push @propvalue, $prop->text;
 	};
@@ -144,7 +187,8 @@ sub ParseProductCard(){
 	for my $count($tx->find('p.Count')->each){
 		$prod{'count'}=$count->text;
 	};
-	if($id==0){
+
+	if($id == 0){
 		$dbi->insert(
 			{
 				topcat => $topcat,
@@ -160,12 +204,11 @@ sub ParseProductCard(){
 			table => 'prod'
 		);
 		say 'Insert';
-		#foreach my $key(keys %prod){			say "$key=$prod{$key}";		}
 	}else{
 		my $result=$dbi->select(
 			['price'],
 			table => 'prod',
-			where => {id=>$id}
+			where => {id => $id}
 		);#set current price
 		
 		my $cur_price=0;
@@ -174,6 +217,7 @@ sub ParseProductCard(){
 			print "[$row->[0]]=[$prod{'price'}] ";
 			$cur_price = $row->[0];
 		}
+
 		if($cur_price<$prod{'price'}){
 			$dbi->update(
 				{
@@ -198,7 +242,7 @@ sub ParseProductCard(){
 	}
 }#sub ParseProductCard
 
-sub GetImagePreview(){
+sub DownloadProductImage(){
 	#NOTE! Move all product images from products catalog to temp
 
 	chdir 'media/temp/';
@@ -206,24 +250,27 @@ sub GetImagePreview(){
 	my $result=$dbi->select(
 			['id','image','count','description'],
 			table=>'prod',
-			where=>'length(image)>0 and length(count)>0 and length(description)>0 and status=0',
+			where=>'length(image)>0 and status=0',
 	);
 
 	while(my $row=$result->fetch_hash){
     	say "Get preview image to id: $row->{'id'}";
 	    $tx=$ua->max_redirects(5)->get($row->{'image'}=>{DNT=>1})->res->content->asset->move_to($row->{'id'}.'.jpeg');
 	};
-	
-	$result = $dbi->select(
-		column => 'id',
-		table => 'prod',
-		where => 'status != 2',
-	);
-	
-	chdir '../';
-	say 'Starting to copy product images';
-	while(my $row = $result->fetch_hash){
-		say "Copy id $row->{'id'}";
-		copy("temp/$row->{'id'}.jpeg","products/$row->{'id'}.jpeg") || die "Can't copy file: $row->{'id'}.jpeg";
-	};
+
+	chdir '../../';
+}
+
+sub CopyProductImage(){
+	my $result = $dbi->select(
+        column => 'id',
+        table => 'prod',
+        where => 'status != 2 and length(image)>0',
+    );
+
+    say 'Starting to copy product images';
+    while(my $row = $result->fetch_hash){
+        say "Copy id $row->{'id'}";
+        copy("media/temp/$row->{'id'}.jpeg","media/products/$row->{'id'}.jpeg") || die "Can't copy file: $row->{'id'}.jpeg";
+    };
 }
