@@ -34,21 +34,21 @@ given (&SelectCmd){
 	}when(2){
 		say "\nStarting to $commands[2]";
 		&GetNewProd;
-       	&DownloadProductImage;
+       		&DownloadProductImage;
 		&CopyProductImage;
 	}when(3){
 		say "\nStarting to $commands[3]";
 		&UpdateCatalog;
-        &GetNewProd;
-        &DownloadProductImage;
-        &CopyProductImage;
+        	&GetNewProd;
+        	&DownloadProductImage;
+        	&CopyProductImage;
 	}when(4){
-        say "\nStarting to $commands[4]";
-        &CopyProductImage;
-    }when(5){
+        	say "\nStarting to $commands[4]";
+        	&CopyProductImage;
+    	}when(5){
 		say "\nStarting to $commands[5]";
-        &DownloadProductImage;
-        &CopyProductImage;
+        	&DownloadProductImage;
+        	&CopyProductImage;
 	}when(6){
 		say "\nStarting to $commands[6]";
 		print 'Enter product id: ';
@@ -272,5 +272,6 @@ sub CopyProductImage(){
     while(my $row = $result->fetch_hash){
         say "Copy id $row->{'id'}";
         copy("media/temp/$row->{'id'}.jpeg","media/products/$row->{'id'}.jpeg") || die "Can't copy file: $row->{'id'}.jpeg";
+	$n++
     };
 }
