@@ -272,6 +272,5 @@ sub CopyProductImage(){
     while(my $row = $result->fetch_hash){
         say "Copy id $row->{'id'}";
         copy("media/temp/$row->{'id'}.jpeg","media/products/$row->{'id'}.jpeg") || die "Can't copy file: $row->{'id'}.jpeg";
-	$n++
     };
 }
