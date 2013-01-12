@@ -16,6 +16,7 @@ my @catalog=();#catalog list
 my $catcount=0;#count of catalog categories
 my $topcat;
 my $subcat;
+my $cmd = '';
 my @commands = (
 	'Quit',
 	'Update catalog (only)',
@@ -24,36 +25,36 @@ my @commands = (
 	'Update products preview (only)',
 	'Download and update products preview',
 	'Parse by product id',
+	'Export data from DataBase',
 );
 
-given (&SelectCmd){
+$cmd = &SelectCmd;
+
+given ($cmd){
+	say "\nStarting to: $commands[$cmd]";
 	when(1){
-		say "\nStarting to $commands[1]";
 		&UpdateCatalog;
 		&CopyProductImage;
 	}when(2){
-		say "\nStarting to $commands[2]";
 		&GetNewProd;
-       		&DownloadProductImage;
+   		&DownloadProductImage;
 		&CopyProductImage;
 	}when(3){
-		say "\nStarting to $commands[3]";
 		&UpdateCatalog;
-        	&GetNewProd;
-        	&DownloadProductImage;
-        	&CopyProductImage;
+       	&GetNewProd;
+       	&DownloadProductImage;
+       	&CopyProductImage;
 	}when(4){
-        	say "\nStarting to $commands[4]";
-        	&CopyProductImage;
-    	}when(5){
-		say "\nStarting to $commands[5]";
-        	&DownloadProductImage;
-        	&CopyProductImage;
+       	&CopyProductImage;
+   	}when(5){
+       	&DownloadProductImage;
+       	&CopyProductImage;
 	}when(6){
-		say "\nStarting to $commands[6]";
 		print 'Enter product id: ';
 		my $id = <STDIN>;
 		&ParseProductCard($id) if $id;
+	}when(7){
+		&ExportData;
 	}default {
 		say 'Buy!'
 	}
@@ -184,8 +185,8 @@ sub ParseProductCard(){
 		$properties = $properties.$key."=".$propvalue[$p]."; ";
 		$p++;
 	}
-	for my $count($tx->find('p.Count')->each){
-		$prod{'count'}=$count->text;
+	for my $count($tx->find('div[data-wa-name^="other_sellers"]')->each){
+		$prod{'count'}=$count->text; print 'LINK: '.$count->text;
 	};
 
 	if($id == 0){
@@ -273,4 +274,29 @@ sub CopyProductImage(){
         say "Copy id $row->{'id'}";
         copy("media/temp/$row->{'id'}.jpeg","media/products/$row->{'id'}.jpeg") || die "Can't copy file: $row->{'id'}.jpeg";
     };
+}
+
+sub ExportData(){
+	my $file = 'data.csv';
+	my $separator = '@';
+	my $result = $dbi->select(
+		table => 'prod',
+	);
+	
+	open (FILE,"> $file") || die "Can't open target file $file";
+
+	foreach my $header (@{$result->header}){
+		print FILE $header.'@';
+	};
+	print FILE "=ROUND(G1*1.2,0)\n";
+
+	while (my $row = $result->fetch){
+		foreach my $i (@{$row}){
+			print FILE $i;
+			print FILE $separator;
+		};
+		print FILE "\n";
+	};
+
+	close FILE;
 }
