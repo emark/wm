@@ -145,6 +145,7 @@ sub GetNewProd(){
 sub ParseProductCard(){
 	my $id = $_[0];
 	my $link = '';
+
 	#Development feature for parsing target product
 	if($_[1]){
 		$link = $_[1];
@@ -158,36 +159,35 @@ sub ParseProductCard(){
 	}
 
 	$tx = $ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
-	
+
 	my %prod = ();
 	$prod{'link'} = $link;
-	for my $c($tx->find('#information h1')->each){
+	for my $c($tx->find('h1')->each){
 		$prod{'caption'}= $c->text;
 	};
 	for my $p($tx->find('.photo')->each){
 		$prod{'image'}= $p->attrs('src');
 	};
 	for my $l ($tx->find('.offer-price')->each){
-		$prod{'price'}=$l->all_text;$prod{'price'}=~s/\s+||\р\.//g;
-	};
-	my $properties = '';
-	my @propname = ();
-	my @propvalue = ();
-	for my $prop($tx->find('div.properties-group > dl.ui-helper-clearfix > dt > span')->each){
-		push @propname, $prop->text;
+		$prod{'price'}=$l->all_text;
+		$prod{'price'}=~s/\s+||\р\.//g;
 	};
 
-	for my $prop($tx->find('div.properties-group > dl.ui-helper-clearfix > dd')->each){
-		push @propvalue, $prop->text;
+	for my $prop($tx->find('div.description p')->each){
+		$prod{'descripiont'} = $prop->text;
 	};
-	my $p=0;#properties count
-	foreach my $key(@propname){
-		$properties = $properties.$key."=".$propvalue[$p]."; ";
-		$p++;
-	}
-	for my $count($tx->find('div[data-wa-name^="other_sellers"]')->each){
-		$prod{'count'}=$count->text; print 'LINK: '.$count->text;
+
+	$prod{'count'} = 0;	
+	for my $offers($tx->find('p.title-good')->each){
+		$prod{'count'} = 1;#More than one offer
 	};
+
+#dev
+#foreach (keys %prod){
+#	say "$_ = $prod{$_}";
+#};
+#exit;
+#
 
 	if($id == 0){
 		$dbi->insert(
@@ -198,7 +198,7 @@ sub ParseProductCard(){
 				caption => $prod{'caption'},
 				image => $prod{'image'},
 				price => $prod{'price'},
-				description => $properties,
+				description => $prod{'description'},
 				count => $prod{'count'},
 				status => 0,
 			},
