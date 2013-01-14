@@ -174,7 +174,22 @@ sub ParseProductCard(){
 	};
 
 	for my $prop($tx->find('div.description p')->each){
-		$prod{'descripiont'} = $prop->text;
+		$prod{'descripion'} = $prop->text;
+	};
+	
+	my @propname = ();
+	my @propvalue = ();
+	for my $coll ($tx->find('div.properties-group > dl.ui-helper-clearfix > dt > span')->each){
+		push @propname, $coll->text;
+	};
+	for my $coll ($tx->find('div.properties-group > dl.ui-helper-clearfix > dd')->each){
+		push @propvalue, $coll->text;
+	};
+	my $n = 0;
+	$prod{prop} = '';
+	foreach my $key (@propname){
+		$prod{prop} = $prod{prop}. $key.'='.$propvalue[$n].'; ';
+		$n++;
 	};
 
 	$prod{'count'} = 0;	
@@ -198,7 +213,7 @@ sub ParseProductCard(){
 				caption => $prod{'caption'},
 				image => $prod{'image'},
 				price => $prod{'price'},
-				description => $prod{'description'},
+				description => $prod{'prop'},
 				count => $prod{'count'},
 				status => 0,
 			},
@@ -249,7 +264,7 @@ sub DownloadProductImage(){
 	chdir 'media/temp/';
 	#Download new product images in temp catalog	
 	my $result=$dbi->select(
-			['id','image','count','description'],
+			['id','image'],
 			table=>'prod',
 			where=>'length(image)>0 and status=0',
 	);
