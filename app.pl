@@ -26,6 +26,7 @@ my @commands = (
 	'Download and update products preview',
 	'Parse by product id',
 	'Export data from DataBase',
+	'Checked product id status',
 );
 
 $cmd = &SelectCmd;
@@ -55,6 +56,8 @@ given ($cmd){
 		&ParseProductCard($id) if $id;
 	}when(7){
 		&ExportData;
+	}when(8){
+		&CheckIdStatus;
 	}default {
 		say 'Buy!'
 	}
@@ -314,4 +317,25 @@ sub ExportData(){
 	};
 
 	close FILE;
+}
+
+sub CheckIdStatus(){
+my @id = ();
+open(FILE,"< update.csv") || die "Can't open update file";
+@id = <FILE>;
+close FILE;
+
+my $result = $dbi->select(
+	table => 'prod',
+	column => ['id','status'],
+	where => {id => [@id]},
+	);
+print "Write data to result.csv\n";
+open (RESULT,">> result.csv") || die "Can't write to result";
+while(my $row = $result->fetch){
+	print RESULT "$row->[0];$row->[1]\n";
+	};
+close RESULT;
+
+#print $dbi->last_sql;
 }
