@@ -171,7 +171,7 @@ sub ParseProductCard(){
 	for my $p($tx->find('.photo')->each){
 		$prod{'image'}= $p->attrs('src');
 	};
-	for my $l ($tx->find('.offer-price')->each){
+	for my $l ($tx->find('.price')->each){
 		$prod{'price'}=$l->all_text;
 		$prod{'price'}=~s/\s+||\р\.//g;
 	};
