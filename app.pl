@@ -61,7 +61,7 @@ given ($cmd){
 };
 
 say 'All done at '.localtime(time);
-exec("echo \"Command: $commands[$cmd] is done.\" | sendxmpp emrk\@jabber.org");
+#exec("echo \"Command: $commands[$cmd] is done.\" | sendxmpp emrk\@jabber.org");
 
 sub SelectCmd(){
 	say 'NOTE! Before starting see README';
