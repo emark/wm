@@ -166,7 +166,7 @@ sub ParseProductCard(){
 
 	my %prod = ();
 	$prod{'link'} = $link;
-	for my $c($tx->find('h1')->each){
+	for my $c($tx->find('div.model-header > div.title')->each){
 		$prod{'caption'}= $c->text;
 	};
 	for my $p($tx->find('.photo')->each){
@@ -178,7 +178,7 @@ sub ParseProductCard(){
 		$prod{'price'}=~s/\s+||\р\.//g;
 	};
 
-	for my $prop($tx->find('div.description p')->each){
+	for my $prop($tx->find('div.text main-description')->each){
 		$prod{'descripion'} = $prop->text;
 	};
 	
@@ -203,10 +203,10 @@ sub ParseProductCard(){
 	};
 
 #dev
-#foreach (keys %prod){
-#	say "$_ = $prod{$_}";
-#};
-#exit;
+foreach (keys %prod){
+	say "$_ = $prod{$_}";
+};
+exit;
 #
 
 	if($id == 0){
