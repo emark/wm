@@ -122,7 +122,7 @@ sub GetNewProd(){
 		$tx = $ua->max_redirects(5)->get("$urlcat?price[from]=$pricefrom&price[to]=$priceto&order=$orderby"=>{DNT=>1})->res->dom;
 		@ln = ();#clear links array
 		for my $l ($tx->find('.InfoModel a')->each){
-			push @ln, $l->attrs('href');
+			push @ln, $l->attr('href');
 		}
 		say "Starting parse product pages\n";
 		my $allitems = @ln;
@@ -170,7 +170,7 @@ sub ParseProductCard(){
 		$prod{'caption'}= $c->text;
 	};
 	for my $p($tx->find('.photo')->each){
-		$prod{'image'}= $p->attrs('src');
+		$prod{'image'}= $p->attr('src');
 	};
 	my $l = ($tx->find('div.price')->first);
 	if ($l){
@@ -178,16 +178,16 @@ sub ParseProductCard(){
 		$prod{'price'}=~s/\s+||\р\.//g;
 	};
 
-	for my $prop($tx->find('div.text main-description')->each){
+	for my $prop($tx->find('div.text.main-description')->each){
 		$prod{'descripion'} = $prop->text;
 	};
 	
 	my @propname = ();
 	my @propvalue = ();
-	for my $coll ($tx->find('div.properties-group > dl.ui-helper-clearfix > dt > span')->each){
+	for my $coll ($tx->find('div.properties-block > dl.ui-helper-clearfix > dt > span')->each){
 		push @propname, $coll->text;
 	};
-	for my $coll ($tx->find('div.properties-group > dl.ui-helper-clearfix > dd')->each){
+	for my $coll ($tx->find('div.properties-block > dl.ui-helper-clearfix > dd')->each){
 		push @propvalue, $coll->text;
 	};
 	my $n = 0;
@@ -203,10 +203,10 @@ sub ParseProductCard(){
 	};
 
 #dev
-foreach (keys %prod){
-	say "$_ = $prod{$_}";
-};
-exit;
+#foreach (keys %prod){
+#	say "$_ = $prod{$_}";
+#};
+#exit;
 #
 
 	if($id == 0){
