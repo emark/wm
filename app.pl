@@ -121,9 +121,13 @@ sub GetNewProd(){
 		say "Top category: $topcat\nSubcategory: $subcat";
 		$tx = $ua->max_redirects(5)->get("$urlcat?price[from]=$pricefrom&price[to]=$priceto&order=$orderby"=>{DNT=>1})->res->dom;
 		@ln = ();#clear links array
-		for my $l ($tx->find('.InfoModel a')->each){
+
+		for my $l ($tx->find('div .catalog-list-item-information a')->each){
+		
 			push @ln, $l->attr('href');
+		
 		}
+
 		say "Starting parse product pages\n";
 		my $allitems = @ln;
 		my $n = 0;
@@ -136,10 +140,15 @@ sub GetNewProd(){
 				where => {link => $link}
 			);
 			my $row = $result->fetch;
+		
 			if($row){
+		
 				say "Link exist. id[$row->[0]]";				
+		
 			}else{
+		
 				&ParseProductCard(0,$link);
+		
 			}
 		}#foreach @ln
 	}#foreach @catalog
