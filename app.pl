@@ -1,9 +1,13 @@
 #!/usr/bin/perl -w
+
 use strict;
+
 use Mojo::UserAgent;
 use Mojo::DOM;
+
 use utf8;
 use v5.10;
+
 use DBIx::Custom;
 use File::Copy;
 
@@ -64,7 +68,6 @@ given ($cmd){
 };
 
 say 'All done at '.localtime(time);
-#exec("echo \"Command: $commands[$cmd] is done.\" | sendxmpp emrk\@jabber.org");
 
 sub SelectCmd(){
 	say 'NOTE! Before starting see README';
@@ -175,9 +178,16 @@ sub ParseProductCard(){
 
 	my %prod = ();
 	$prod{'link'} = $link;
-	for my $c($tx->find('div.model-header > div.title')->each){
-		$prod{'caption'}= $c->text;
+
+
+	#for my $c($tx->find('div.model-header > div.title')->each){
+	for my $c($tx->find('h1.title')->each){
+
+		my $caption = $c->text;
+		utf8::encode $caption;	
+		$prod{'caption'}= $caption;
 	};
+
 	for my $p($tx->find('.photo')->each){
 		$prod{'image'}= $p->attr('src');
 	};
@@ -193,12 +203,22 @@ sub ParseProductCard(){
 	
 	my @propname = ();
 	my @propvalue = ();
-	for my $coll ($tx->find('div.properties-block > dl.ui-helper-clearfix > dt > span')->each){
-		push @propname, $coll->text;
+	my $prop_text = '';
+
+	for my $coll ($tx->find('div.properties-block-row-option > span')->each){
+	
+		$prop_text = $coll->text;
+		utf8::encode $prop_text;
+		push @propname, $prop_text;
 	};
-	for my $coll ($tx->find('div.properties-block > dl.ui-helper-clearfix > dd')->each){
-		push @propvalue, $coll->text;
+
+	for my $coll ($tx->find('div.properties-block-row-option-value')->each){
+
+		$prop_text = $coll->text;
+		utf8::encode $prop_text;
+		push @propvalue, $prop_text;
 	};
+
 	my $n = 0;
 	$prod{prop} = '';
 	foreach my $key (@propname){
@@ -211,7 +231,8 @@ sub ParseProductCard(){
 		$prod{'count'} = 1;#More than one offer
 	};
 
-#dev
+#Development: see product parameters 
+#
 #foreach (keys %prod){
 #	say "$_ = $prod{$_}";
 #};
