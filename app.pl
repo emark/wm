@@ -29,6 +29,7 @@ my @commands = (
 	'Update products preview (only)',
 	'Download and update products preview',
 	'Parse by product id',
+	'Update product item',
 	'Export data from DataBase',
 	'Checked product id status',
 );
@@ -57,10 +58,13 @@ given ($cmd){
 	}when(6){
 		print 'Enter product id: ';
 		my $id = <STDIN>;
-		&ParseProductCard($id) if $id;
+		print "Function disabled";
+		#&ParseProductCard($id) if $id;
 	}when(7){
-		&ExportData;
+		&UpdateProductItem;
 	}when(8){
+		&ExportData;
+	}when(9){
 		&CheckIdStatus;
 	}default {
 		say 'Buy!'
@@ -94,7 +98,7 @@ sub UpdateCatalog(){
 	}
 	print 'Deleting marked id...';
 	$dbi->delete(table=>'prod',where=>{status=>2});#Delete mared items
-	say 'Done, databes updated';
+	say 'Done, database updated ok';
 	my $result=$dbi->select(
 		['id','link'],
 		table=>'prod',
@@ -102,7 +106,7 @@ sub UpdateCatalog(){
 	);
 	while(my $row=$result->fetch_hash){
 		print "Update product info, id[$row->{'id'}]: ";
-		&ParseProductCard($row->{'id'},$row->{'link'});
+		&UpdateProductPrice($row->{'id'},$row->{'link'});
 	}
 }
 
@@ -149,31 +153,19 @@ sub GetNewProd(){
 				say "Link exist. id[$row->[0]]";				
 		
 			}else{
-		
-				&ParseProductCard(0,$link);
+
+				&UpdateProductPrice(0, $link);		
+				#&ParseProductCard(0,$link);
 		
 			}
 		}#foreach @ln
 	}#foreach @catalog
 }#sub GetNewProd
 
-#Usage: ($id,$link)
+#Usage: ($link)
 sub ParseProductCard(){
-	my $id = $_[0];
-	my $link = '';
 
-	#Development feature for parsing target product
-	if($_[1]){
-		$link = $_[1];
-	}else{
-		my $result = $dbi->select(
-			column => 'link',
-			table => 'prod',
-			where => {'id' => $id},
-		);
-		$link = $result->fetch->[0];
-	}
-
+	my $link =$_[0];
 	$tx = $ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
 
 	my %prod = ();
@@ -188,7 +180,7 @@ sub ParseProductCard(){
 		$prod{'caption'}= $caption;
 	};
 
-	for my $p($tx->find('.photo')->each){
+	for my $p($tx->find('img.photo')->each){
 		$prod{'image'}= $p->attr('src');
 	};
 	my $l = ($tx->find('div.price')->first);
@@ -238,6 +230,30 @@ sub ParseProductCard(){
 #};
 #exit;
 #
+return %prod;
+}#sub ParseProductCard
+
+
+#Usage: ($id,$link)
+sub UpdateProductPrice(){
+
+	my $id = $_[0];
+	my $link = '';
+
+	#Development feature for parsing target product
+	if($_[1]){
+		$link = $_[1];
+	}else{
+		my $result = $dbi->select(
+			column => 'link',
+			table => 'prod',
+			where => {'id' => $id},
+		);
+		$link = $result->fetch->[0];
+	}
+
+	my %prod= ();
+	%prod = &ParseProductCard($link);
 
 	if($id == 0){
 		$dbi->insert(
@@ -291,7 +307,7 @@ sub ParseProductCard(){
 			say 'Not updated';
 		}
 	}
-}#sub ParseProductCard
+}
 
 sub DownloadProductImage(){
 	#NOTE! Move all product images from products catalog to temp
@@ -301,7 +317,7 @@ sub DownloadProductImage(){
 	my $result=$dbi->select(
 			['id','image'],
 			table=>'prod',
-			where=>'length(image)>0 and status=0',
+			where=>'length(image)>0',
 	);
 
 	while(my $row=$result->fetch_hash){
@@ -370,4 +386,35 @@ while(my $row = $result->fetch){
 close RESULT;
 
 #print $dbi->last_sql;
+}
+
+sub UpdateProductItem(){
+
+my $result = $dbi->select(
+	table => 'prod',
+	column => ['id','link'],
+);
+
+my %prod = ();
+
+my $n = 0;
+
+while (my $row = $result->fetch_hash){
+	
+	print "\nId: $row->{id}\t\n";
+	%prod = &ParseProductCard($row->{link});
+	
+	if ($prod{image}){
+	
+		$dbi->update(
+			{image => $prod{'image'}},
+			table => 'prod',
+			where => {id => $row->{id}},
+		);
+	};
+	$n++;
+	
+	print "$n: $prod{image}\n";
+};
+
 }
