@@ -7,6 +7,7 @@ use Mojo::DOM;
 
 use utf8;
 use v5.10;
+use open ':std', ':encoding(UTF-8)';
 
 use DBIx::Custom;
 use File::Copy;
@@ -22,23 +23,23 @@ my $topcat;
 my $subcat;
 my $cmd = '';
 my @commands = (
-	'Quit',
-	'Update catalog (only)',
-	'Add new products (only)',
-	'Update and add products',
-	'Update products preview (only)',
+	'Выход',
+	'Обновить каталог',
+	'Добавить новые товары',
+	'Обновить каталог и добавить новые товары',
+	'Обновить фото товаров',
 	'Download and update products preview',
-	'Parse by product id',
+	'Парсинг по коду товара',
 	'Update product item',
-	'Export data from DataBase',
-	'Checked product id status',
+	'Экспорт в файл',
+	'Проверить статус товара',
 );
 
 $cmd = &SelectCmd;
 
 for ($cmd){
 	
-	say "\nStarting to: $commands[$cmd]";
+	say "\nВыполняю команду: $commands[$cmd]";
 
 	if ($cmd == 1){
 		&UpdateCatalog;
@@ -78,21 +79,21 @@ for ($cmd){
 		&CheckIdStatus;
 
 	} elsif ($cmd == 0) {
-		say 'Buy!'
+		say 'Удачи!'
 	}
 };
 
-say 'All done at '.localtime(time);
+say 'Инструкции выполнены '.localtime(time);
 
 sub SelectCmd(){
-	say 'NOTE! Before starting see README';
-	say 'Select command:';
+	say 'Внимание! Перед запуском прочтите файл README';
+	say 'Выбор команды:';
 	my $n = 0;
 	foreach my $key (@commands){
-		say "\t$n. $key";
+		say "\t$n: $key";
 		$n++;
 	};
-	print "Your choise: ";
+	print "\nВаш выбор: ";
 	return <STDIN>;
 };
 
