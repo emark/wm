@@ -7,7 +7,7 @@ use Mojo::DOM;
 
 use utf8;
 use v5.10;
-use open ':std', ':encoding(UTF-8)';
+#use open ':std', ':encoding(UTF-8)';
 
 use DBIx::Custom;
 use File::Copy;
@@ -30,9 +30,9 @@ my @commands = (
 	'Скопировать фото товаров',
 	'Загрузить и скопировать фотографии товаров',
 	'Парсинг по коду товара',
-	'Обновить данные товаров',
+	'Обновить данные товаров (фото)',
 	'Экспорт в файл',
-	'Проверить статус товара',
+	'Экспорт статусов товаров',
 );
 
 $cmd = &SelectCmd;
@@ -66,7 +66,8 @@ for ($cmd){
 	} elsif ($cmd == 6){
 		print 'Enter product id: ';
 		my $id = <STDIN>;
-		print "Function disabled";
+		&UpdateProductPrice($id);
+		#print "Function disabled";
 		#&ParseProductCard($id) if $id;
 
 	} elsif ($cmd == 7){
@@ -125,7 +126,7 @@ sub UpdateCatalog(){
 	);
 	
 	while(my $row=$result->fetch_hash){
-		print "Update product info, id[$row->{'id'}]: ";
+		print "Обновление цены товара, id[$row->{'id'}]: ";
 		&UpdateProductPrice($row->{'id'},$row->{'link'});
 	}
 }
@@ -290,7 +291,8 @@ sub UpdateProductPrice(){
 			},
 			table => 'prod'
 		);
-		say 'Insert';
+		say 'Товар добавлен';
+
 	}else{
 		my $result=$dbi->select(
 			['price'],
@@ -298,11 +300,12 @@ sub UpdateProductPrice(){
 			where => {id => $id}
 		);#set current price
 		
-		my $cur_price=0;
+		my $cur_price = 0;
 		
-		while(my $row=$result->fetch){
+		while (my $row=$result->fetch){
 			print "[$row->[0]]=[$prod{'price'}] ";
 			$cur_price = $row->[0];
+
 		}
 
 		if($cur_price<$prod{'price'}){
@@ -315,16 +318,19 @@ sub UpdateProductPrice(){
 				table => 'prod',
 				where => {id => $id}
 			);
-			say 'Update';
+			say 'Обновлено';
+
 		}elsif(!$prod{'price'}){
 			$dbi->update(
 				{status => 2},
 				table => 'prod',
 				where => {id => $id}
 			);
-			say 'Break link. Deleted';
+			say 'Новая цена отсутствует. Товар удален.';
+
 		}else{
-			say 'Not updated';
+			say 'Не обновлено';
+
 		}
 	}
 }
