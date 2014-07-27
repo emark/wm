@@ -36,37 +36,48 @@ my @commands = (
 
 $cmd = &SelectCmd;
 
-given ($cmd){
+for ($cmd){
+	
 	say "\nStarting to: $commands[$cmd]";
-	when(1){
+
+	if ($cmd == 1){
 		&UpdateCatalog;
 		&CopyProductImage;
-	}when(2){
+	
+	} elsif ($cmd == 2){
 		&GetNewProd;
    		&DownloadProductImage;
 		&CopyProductImage;
-	}when(3){
+	
+	} elsif ($cmd == 3){
 		&UpdateCatalog;
        	&GetNewProd;
        	&DownloadProductImage;
        	&CopyProductImage;
-	}when(4){
+
+	} elsif ($cmd == 4){
        	&CopyProductImage;
-   	}when(5){
+
+   	} elsif ($cmd == 5){
        	&DownloadProductImage;
        	&CopyProductImage;
-	}when(6){
+
+	} elsif ($cmd == 6){
 		print 'Enter product id: ';
 		my $id = <STDIN>;
 		print "Function disabled";
 		#&ParseProductCard($id) if $id;
-	}when(7){
+
+	} elsif ($cmd == 7){
 		&UpdateProductItem;
-	}when(8){
+
+	} elsif ($cmd == 8){
 		&ExportData;
-	}when(9){
+
+	} elsif ($cmd == 9){
 		&CheckIdStatus;
-	}default {
+
+	} elsif ($cmd == 0) {
 		say 'Buy!'
 	}
 };
