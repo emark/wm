@@ -24,13 +24,13 @@ my $subcat;
 my $cmd = '';
 my @commands = (
 	'Выход',
-	'Обновить каталог',
+	'Обновить цены',
 	'Добавить новые товары',
 	'Обновить каталог и добавить новые товары',
-	'Обновить фото товаров',
-	'Download and update products preview',
+	'Скопировать фото товаров',
+	'Загрузить и скопировать фотографии товаров',
 	'Парсинг по коду товара',
-	'Update product item',
+	'Обновить данные товаров',
 	'Экспорт в файл',
 	'Проверить статус товара',
 );
@@ -98,24 +98,32 @@ sub SelectCmd(){
 };
 
 sub UpdateCatalog(){
+
 	my @id=();
+
 	open (UPDATE,"< update.csv") || die "Can't open update file";	
 	@id=<UPDATE>;
 	close UPDATE;
-	$dbi->update_all({status=>2},table=>'prod');#Mark all item as deleted
+
+	$dbi->update_all({status=>2}, table=>'prod');#Mark all item as deleted
+
 	foreach my $key (@id){
 		chomp $key;
 		$dbi->update({status=>3},table=>'prod',where=>{id=>$key});#Mark items as allowed from update.csv
-		say "Status update, id=$key";
+		say "Статус обновлен, id=$key";
 	}
-	print 'Deleting marked id...';
-	$dbi->delete(table=>'prod',where=>{status=>2});#Delete mared items
-	say 'Done, database updated ok';
+
+	print 'Удаляю отмеченные записи...';
+
+	$dbi->delete(table=>'prod', where=>{status=>2});#Delete mared items
+	say 'Готово';
+
 	my $result=$dbi->select(
 		['id','link'],
 		table=>'prod',
 		where=>{status=>3},
 	);
+	
 	while(my $row=$result->fetch_hash){
 		print "Update product info, id[$row->{'id'}]: ";
 		&UpdateProductPrice($row->{'id'},$row->{'link'});
