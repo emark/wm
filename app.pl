@@ -416,10 +416,27 @@ close RESULT;
 
 sub UpdateProductItem(){
 
-my $result = $dbi->select(
-	table => 'prod',
-	column => ['id','link'],
-);
+say 'Enter product id: ';
+my $id = <STDIN> || 0;
+my $result = '';
+
+if($id){
+
+	say 'Выборка по одному товару';
+	$result = $dbi->select(
+		
+		table => 'prod',
+		column => ['id','link'],
+		where => {id => $id},
+	);
+}else{
+
+	say 'Выборка по всем товарам';
+	$result = $dbi->select(
+		table => 'prod',
+		column => ['id','link'],
+	);
+}
 
 my %prod = ();
 
