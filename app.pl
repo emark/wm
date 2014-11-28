@@ -380,7 +380,7 @@ sub ExportData(){
 	foreach my $header (@{$result->header}){
 		print FILE $header.'@';
 	};
-	print FILE "=ROUND(G1*1.2,0)\n";
+	print FILE "=ROUND(G1*1.5,0)\n";
 
 	while (my $row = $result->fetch){
 		foreach my $i (@{$row}){
