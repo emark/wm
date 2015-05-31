@@ -23,23 +23,23 @@ my $topcat;
 my $subcat;
 my $cmd = '';
 my @commands = (
-	'Выход',
-	'Обновить цены',
-	'Добавить новые товары',
-	'Обновить каталог и добавить новые товары',
-	'Скопировать фото товаров',
-	'Загрузить и скопировать фотографии товаров',
-	'Парсинг по коду товара',
-	'Обновить данные товаров (фото)',
-	'Экспорт в файл',
-	'Экспорт статусов товаров',
+	'Quit',
+	'Price update',
+	'Add new products',
+	'Price update and adding new products',
+	'Copy products images /temp->/products',
+	'Download and copy products images',
+	'Prodict ID parsing',
+	'Update product image (new source)',
+	'Export all data',
+	'Export status of products',
 );
 
 $cmd = &SelectCmd;
 
 for ($cmd){
 	
-	say "\nВыполняю команду: $commands[$cmd]";
+	say "\nStarting to:  $commands[$cmd]";
 
 	if ($cmd == 1){
 		&UpdateCatalog;
@@ -64,7 +64,7 @@ for ($cmd){
        	&CopyProductImage;
 
 	} elsif ($cmd == 6){
-		print 'Enter product id: ';
+		print 'Enter product ID: ';
 		my $id = <STDIN>;
 		&UpdateProductPrice($id);
 		#print "Function disabled";
@@ -80,21 +80,21 @@ for ($cmd){
 		&CheckIdStatus;
 
 	} elsif ($cmd == 0) {
-		say 'Удачи!'
+		say 'Quit. Buy!'
 	}
 };
 
-say 'Инструкции выполнены '.localtime(time);
+say 'Job is finished at '.localtime(time);
 
 sub SelectCmd(){
-	say 'Внимание! Перед запуском прочтите файл README';
-	say 'Выбор команды:';
+	say 'Warning! Before starting read file README';
+	say 'Please, select command.';
 	my $n = 0;
 	foreach my $key (@commands){
 		say "\t$n: $key";
 		$n++;
 	};
-	print "\nВаш выбор: ";
+	print "\nEnter number: ";
 	return <STDIN>;
 };
 
@@ -111,13 +111,13 @@ sub UpdateCatalog(){
 	foreach my $key (@id){
 		chomp $key;
 		$dbi->update({status=>3},table=>'prod',where=>{id=>$key});#Mark items as allowed from update.csv
-		say "Статус обновлен, id=$key";
+		say "Status updated, ID=$key";
 	}
 
-	print 'Удаляю отмеченные записи...';
+	print 'Remove the marked products...';
 
 	$dbi->delete(table=>'prod', where=>{status=>2});#Delete mared items
-	say 'Готово';
+	say 'Done';
 
 	my $result=$dbi->select(
 		['id','link'],
@@ -126,7 +126,7 @@ sub UpdateCatalog(){
 	);
 	
 	while(my $row=$result->fetch_hash){
-		print "Обновление цены товара, id[$row->{'id'}]: ";
+		print "Updating product price. ID [$row->{'id'}]: ";
 		&UpdateProductPrice($row->{'id'},$row->{'link'});
 	}
 }
@@ -291,7 +291,7 @@ sub UpdateProductPrice(){
 			},
 			table => 'prod'
 		);
-		say 'Товар добавлен';
+		say 'Product added.';
 
 	}else{
 		my $result=$dbi->select(
@@ -318,7 +318,7 @@ sub UpdateProductPrice(){
 				table => 'prod',
 				where => {id => $id}
 			);
-			say 'Обновлено';
+			say 'Updated';
 
 		}elsif(!$prod{'price'}){
 			$dbi->update(
@@ -326,10 +326,10 @@ sub UpdateProductPrice(){
 				table => 'prod',
 				where => {id => $id}
 			);
-			say 'Новая цена отсутствует. Товар удален.';
+			say 'New price not found. Product removed.';
 
 		}else{
-			say 'Не обновлено';
+			say 'Not updated';
 
 		}
 	}
@@ -416,13 +416,13 @@ close RESULT;
 
 sub UpdateProductItem(){
 
-say 'Enter product id: ';
+say 'Enter product ID: ';
 my $id = <STDIN> || 0;
 my $result = '';
 
 if($id){
 
-	say 'Выборка по одному товару';
+	say 'Select one product';
 	$result = $dbi->select(
 		
 		table => 'prod',
@@ -431,7 +431,7 @@ if($id){
 	);
 }else{
 
-	say 'Выборка по всем товарам';
+	say 'Select all products';
 	$result = $dbi->select(
 		table => 'prod',
 		column => ['id','link'],
