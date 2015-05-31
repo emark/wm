@@ -3,3 +3,5 @@ db/*
 *.swp
 media/*
 arch
+~*.*
+*.*~

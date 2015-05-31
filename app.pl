@@ -7,11 +7,11 @@ use Mojo::DOM;
 
 use utf8;
 use v5.10;
-#use open ':std', ':encoding(UTF-8)';
 
 use DBIx::Custom;
 use File::Copy;
 
+my $VERSION = '0.9.1';
 my $dbi=DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
 my $ua=Mojo::UserAgent->new();
 my $tx=Mojo::DOM->new();
@@ -22,6 +22,8 @@ my $catcount=0;#count of catalog categories
 my $topcat;
 my $subcat;
 my $cmd = '';
+my @result = ('Ok','Error');#status of execute 
+my $errmsg = '';
 my @commands = (
 	'Quit',
 	'Price update',
@@ -35,12 +37,14 @@ my @commands = (
 	'Export status of products',
 );
 
-$cmd = &SelectCmd;
+print "Webparser $VERSION\nhttp://github.com/emark/wm.git\n\n";
 
-for ($cmd){
+do {
+	$cmd = &SelectCmd;	
+
+	say "/$commands[$cmd]/"; 
+	say 'Starting new job at'.localtime(time);
 	
-	say "\nStarting to:  $commands[$cmd]";
-
 	if ($cmd == 1){
 		&UpdateCatalog;
 		&CopyProductImage;
@@ -80,18 +84,18 @@ for ($cmd){
 		&CheckIdStatus;
 
 	} elsif ($cmd == 0) {
-		say 'Quit. Buy!'
+		say 'Exit. Buy!'
 	}
-};
 
-say 'Job is finished at '.localtime(time);
+	say 'Job is finished at '.localtime(time);
+
+} while ($cmd!=0);
 
 sub SelectCmd(){
-	say 'Warning! Before starting read file README';
-	say 'Please, select command.';
+	say "\nPlease, select command:";
 	my $n = 0;
 	foreach my $key (@commands){
-		say "\t$n: $key";
+		say "\t[$n] - $key";
 		$n++;
 	};
 	print "\nEnter number: ";
@@ -391,6 +395,7 @@ sub ExportData(){
 	};
 
 	close FILE;
+	return 1;
 }
 
 sub CheckIdStatus(){
