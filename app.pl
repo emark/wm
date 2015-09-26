@@ -12,13 +12,15 @@ use DBIx::Custom;
 use File::Copy;
 
 my $VERSION = '0.9.1';
-my $dbi=DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
-my $ua=Mojo::UserAgent->new();
-my $tx=Mojo::DOM->new();
-my @ln=();#product links from subcategory list
-my $catfile='catalog.csv';
-my @catalog=();#catalog list
-my $catcount=0;#count of catalog categories
+my $dev = 0;
+
+my $dbi = DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
+my $ua = Mojo::UserAgent->new();
+my $tx = Mojo::DOM->new();
+my @ln = ();#product links from subcategory list
+my $catfile = 'catalog.csv';
+my @catalog = ();#catalog list
+my $catcount = 0;#count of catalog categories
 my $topcat;
 my $subcat;
 my $cmd = '';
@@ -105,6 +107,7 @@ sub SelectCmd(){
 sub UpdateCatalog(){
 
 	my @id=();
+	my $n = 1;
 
 	open (UPDATE,"< update.csv") || die "Can't open update file";	
 	@id=<UPDATE>;
@@ -130,8 +133,9 @@ sub UpdateCatalog(){
 	);
 	
 	while(my $row=$result->fetch_hash){
-		print "Updating product price. ID [$row->{'id'}]: ";
+		print "Updating product price: $n/".@id." ID [$row->{'id'}]: ";
 		&UpdateProductPrice($row->{'id'},$row->{'link'});
+		$n++;
 	}
 }
 
@@ -211,7 +215,7 @@ sub ParseProductCard(){
 	my $l = ($tx->find('div.price')->first);
 	if ($l){
 		$prod{'price'}=$l->all_text;
-		$prod{'price'}=~s/\s+||\р\.//g;
+		$prod{'price'}=~s/\s+|\Р//g;
 	};
 
 	for my $prop($tx->find('div.text.main-description')->each){
@@ -250,10 +254,12 @@ sub ParseProductCard(){
 
 #Development: see product parameters 
 #
-#foreach (keys %prod){
-#	say "$_ = $prod{$_}";
-#};
-#exit;
+	if ($dev){
+		foreach (keys %prod){
+			say "$_ = $prod{$_}";
+		};
+		exit;
+	};
 #
 return %prod;
 }#sub ParseProductCard
