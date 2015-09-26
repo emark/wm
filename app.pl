@@ -26,12 +26,12 @@ my @result = ('Ok','Error');#status of execute
 my $errmsg = '';
 my @commands = (
 	'Quit',
-	'Price update',
+	'Update price',
 	'Add new products',
-	'Price update and adding new products',
+	'Update price and add new products',
 	'Copy products images /temp->/products',
 	'Download and copy products images',
-	'Prodict ID parsing',
+	'Parsing by ID',
 	'Update product image (new source)',
 	'Export all data',
 	'Export status of products',
