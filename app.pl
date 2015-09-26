@@ -35,6 +35,7 @@ my @commands = (
 	'Download and copy products images',
 	'Parsing by ID',
 	'Update product image (new source)',
+	'Update product image (new sorce) from list',
 	'Export all data',
 	'Export status of products',
 );
@@ -45,7 +46,7 @@ do {
 	$cmd = &SelectCmd;	
 
 	say "/$commands[$cmd]/"; 
-	say 'Starting new job at'.localtime(time);
+	say 'Starting new job at '.localtime(time);
 	
 	if ($cmd == 1){
 		&UpdateCatalog;
@@ -79,10 +80,13 @@ do {
 	} elsif ($cmd == 7){
 		&UpdateProductItem;
 
-	} elsif ($cmd == 8){
+	} elsif($cmd == 8){
+		&UpdateProductItemFromList;
+
+	}elsif ($cmd == 9){
 		&ExportData;
 
-	} elsif ($cmd == 9){
+	} elsif ($cmd == 10){
 		&CheckIdStatus;
 
 	} elsif ($cmd == 0) {
@@ -427,13 +431,22 @@ close RESULT;
 
 sub UpdateProductItem(){
 
-say 'Enter product ID: ';
-my $id = <STDIN> || 0;
+my $id = 0;
+
+if(@_[0]){
+
+	$id = @_[0];
+}else{
+
+	say 'Enter product ID: ';
+	$id=<STDIN>;
+}
+
 my $result = '';
 
-if($id){
+if($id>0){
 
-	say 'Select one product';
+	say 'Select one product ';
 	$result = $dbi->select(
 		
 		table => 'prod',
@@ -469,6 +482,23 @@ while (my $row = $result->fetch_hash){
 	$n++;
 	
 	print "$n: $prod{image}\n";
+};
+
+sub UpdateProductItemFromList(){
+	
+	say 'Reading from file: list.csv';
+	my @list = ();
+
+	open (LIST,"< list.csv") || die "Can't open source list";
+	@list = <LIST>;	
+	close LIST;
+
+	foreach my $key (@list){
+
+		chop($key);	
+		print "Update item: [$key]\n";
+		&UpdateProductItem($key);
+	};
 };
 
 }
