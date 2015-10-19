@@ -433,9 +433,9 @@ sub UpdateProductItem(){
 
 my $id = 0;
 
-if(@_[0]){
+if($_[0]){
 
-	$id = @_[0];
+	$id = $_[0];
 }else{
 
 	say 'Enter product ID: ';
