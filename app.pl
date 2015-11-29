@@ -162,7 +162,7 @@ sub GetNewProd(){
 		$tx = $ua->max_redirects(5)->get("$urlcat?price[from]=$pricefrom&price[to]=$priceto&order=$orderby"=>{DNT=>1})->res->dom;
 		@ln = ();#clear links array
 
-		for my $l ($tx->find('div .catalog-list-item-information a')->each){
+		for my $l ($tx->find('div .listing-pics__info a')->each){
 		
 			push @ln, $l->attr('href');
 		
@@ -213,9 +213,10 @@ sub ParseProductCard(){
 		$prod{'caption'}= $caption;
 	};
 
-	for my $p($tx->find('img.photo')->each){
-		$prod{'image'}= $p->attr('src');
-	};
+	$prod{'image'} = $tx->all_text;
+	$prod{'image'}=~s/photo: \'(http:\/\/.*)\'/$1/g;
+	$prod{'image'}=$1;
+	
 	my $l = ($tx->find('div.price')->first);
 	if ($l){
 		$prod{'price'}=$l->all_text;
