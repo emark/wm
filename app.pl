@@ -54,7 +54,7 @@ do {
 	
 	} elsif ($cmd == 2){
 		&GetNewProd;
-   		&DownloadProductImage;
+   	&DownloadProductImage;
 		&CopyProductImage;
 	
 	} elsif ($cmd == 3){
