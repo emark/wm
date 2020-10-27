@@ -11,7 +11,7 @@ use v5.10;
 use DBIx::Custom;
 use File::Copy;
 
-my $VERSION = '0.9.1';
+my $VERSION = '0.9.2';
 my $dev = 0;
 
 my $dbi = DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
@@ -53,13 +53,13 @@ do {
 		&CopyProductImage;
 	
 	} elsif ($cmd == 2){
-		&GetNewProd;
-   	&DownloadProductImage;
+		&GetNewProduct;
+		&DownloadProductImage;
 		&CopyProductImage;
 	
 	} elsif ($cmd == 3){
 		&UpdateCatalog;
-       	&GetNewProd;
+       	&GetNewProduct;
        	&DownloadProductImage;
        	&CopyProductImage;
 
@@ -117,23 +117,35 @@ sub UpdateCatalog(){
 	@id=<UPDATE>;
 	close UPDATE;
 
-	$dbi->update_all({status=>2}, table=>'prod');#Mark all item as deleted
+	$dbi->update_all(
+		{ status => 2 }, 
+		table => 'prod'
+	);#Mark all item as deleted
 
 	foreach my $key (@id){
 		chomp $key;
-		$dbi->update({status=>3},table=>'prod',where=>{id=>$key});#Mark items as allowed from update.csv
+		$dbi->update(
+			{ status => 3 },
+			table => 'prod',
+			where => { id => $key }
+		);#Mark items as allowed from update.csv
+
 		say "Status updated, ID=$key";
 	}
 
 	print 'Remove the marked products...';
 
-	$dbi->delete(table=>'prod', where=>{status=>2});#Delete mared items
+	$dbi->delete(
+		table => 'prod', 
+		where => { status => 2 }
+	);#Delete mared items
+
 	say 'Done';
 
 	my $result=$dbi->select(
 		['id','link'],
-		table=>'prod',
-		where=>{status=>3},
+		table => 'prod',
+		where => { status => 3 },
 	);
 	
 	while(my $row=$result->fetch_hash){
@@ -143,7 +155,7 @@ sub UpdateCatalog(){
 	}
 }
 
-sub GetNewProd(){
+sub GetNewProduct(){
 	say "Open catalog file: $catfile";
 	open (CAT,"< $catfile") || die "Can't open $catfile file";
 	@catalog = <CAT>;
@@ -152,19 +164,23 @@ sub GetNewProd(){
 	say "Reading $catcount position(s)";
 
 	my $c = 0;#catalog subcategory counter
-	my $urlcat;my $pricefrom;my $priceto;my $orderby;
+	my $store;
+	my $urlcat; 
+	my $pricefrom;
+	my $priceto;
+	my $orderby;
 	foreach my $key(@catalog){#parsing catalog string
 		$c++;
 		chomp $key;
-		($topcat,$subcat,$urlcat,$pricefrom,$priceto,$orderby) = split(';',$key);
+		($store,$topcat,$subcat,$urlcat,$pricefrom,$priceto,$orderby) = split(';',$key);
 
 		say "Top category: $topcat\nSubcategory: $subcat";
-		$tx = $ua->max_redirects(5)->get("$urlcat?price[from]=$pricefrom&price[to]=$priceto&order=$orderby"=>{DNT=>1})->res->dom;
+		$tx = $ua->max_redirects(5)->get("$urlcat"=>{DNT=>1})->res->dom;
 		@ln = ();#clear links array
 
-		for my $l ($tx->find('div .listing-pics__info a')->each){
+		for my $l ($tx->find('div .indexGoods__item__descriptionCover a')->each){
 		
-			push @ln, $l->attr('href');
+			push @ln, $store.$l->attr('href') if ($l->attr('href') ne '#');
 		
 		}
 
@@ -187,7 +203,7 @@ sub GetNewProd(){
 		
 			}else{
 
-				&UpdateProductPrice(0, $link);		
+				&UpdateProductPrice(0, $link);
 				#&ParseProductCard(0,$link);
 		
 			}
@@ -206,39 +222,40 @@ sub ParseProductCard(){
 
 
 	#for my $c($tx->find('div.model-header > div.title')->each){
-	for my $c($tx->find('h1.title')->each){
+	for my $c($tx->find('h1')->each){
 
 		my $caption = $c->text;
 		utf8::encode $caption;	
 		$prod{'caption'}= $caption;
 	};
 
+	my $l = ($tx->find('div.p__displayedItem__images__big a')->first);
 	$prod{'image'} = $tx->all_text;
-	$prod{'image'}=~s/photo: \'(http:\/\/.*)\'/$1/g;
-	$prod{'image'}=$1;
+	$prod{'image'} = $l->attr('href');
 	
-	my $l = ($tx->find('div.price')->first);
+	$l = ($tx->find('span.js__actualPrice')->first);
 	if ($l){
 		$prod{'price'}=$l->all_text;
-		$prod{'price'}=~s/\s+|\Р//g;
+		$prod{'price'}=~s/\s+|\₽//g;
 	};
 
-	for my $prop($tx->find('div.text.main-description')->each){
+	for my $prop($tx->find('div.descriptionText_cover p')->each){
 		$prod{'descripion'} = $prop->text;
+		utf8::encode $prod{'descripion'}; 
 	};
 	
 	my @propname = ();
 	my @propvalue = ();
 	my $prop_text = '';
 
-	for my $coll ($tx->find('div.properties-block-row-option > span')->each){
+	for my $coll ($tx->find('ul.featureList > li.featureList__item > span')->each){
 	
 		$prop_text = $coll->text;
 		utf8::encode $prop_text;
 		push @propname, $prop_text;
 	};
 
-	for my $coll ($tx->find('div.properties-block-row-option-value')->each){
+	for my $coll ($tx->find('ul.featureList > li.featureList__item')->each){
 
 		$prop_text = $coll->text;
 		utf8::encode $prop_text;
@@ -253,8 +270,8 @@ sub ParseProductCard(){
 	};
 
 	$prod{'count'} = 0;	
-	for my $offers($tx->find('p.title-good')->each){
-		$prod{'count'} = 1;#More than one offer
+	for my $offers($tx->find('span.catalog__displayedItem__availabilityCount > label')->each){
+		$prod{'count'} = $offers->text;#More than one offer
 	};
 
 #Development: see product parameters 
@@ -357,13 +374,15 @@ sub DownloadProductImage(){
 	#Download new product images in temp catalog	
 	my $result=$dbi->select(
 			['id','image'],
-			table=>'prod',
-			where=>'length(image)>0',
+			table => 'prod',
+			where => 'length(image)>0',
 	);
 
 	while(my $row=$result->fetch_hash){
     	say "Get preview image to id: $row->{'id'}";
-	    $tx=$ua->max_redirects(5)->get($row->{'image'}=>{DNT=>1})->res->content->asset->move_to($row->{'id'}.'.jpeg');
+		my $ext = $row->{'image'};
+		$ext =~s/^.+\.//;
+	    $tx=$ua->max_redirects(5)->get($row->{'image'}=>{DNT=>1})->res->content->asset->move_to($row->{'id'}.'.'.$ext);
 	};
 
 	chdir '../../';
@@ -371,7 +390,7 @@ sub DownloadProductImage(){
 
 sub CopyProductImage(){
 	my $result = $dbi->select(
-        column => 'id',
+        column => ['id', 'image'],
         table => 'prod',
         where => 'status != 2 and length(image)>0',
     );
@@ -379,7 +398,9 @@ sub CopyProductImage(){
     say 'Starting to copy product images';
     while(my $row = $result->fetch_hash){
         say "Copy id $row->{'id'}";
-        copy("media/temp/$row->{'id'}.jpeg","media/products/$row->{'id'}.jpeg") || die "Can't copy file: $row->{'id'}.jpeg";
+		my $ext = $row->{'image'};
+		$ext =~s/^.+\.//;
+        copy("media/temp/$row->{'id'}.$ext","media/products/$row->{'id'}.$ext") || die "Can't copy file: $row->{'id'}.$ext";
     };
 }
 
@@ -427,7 +448,6 @@ while(my $row = $result->fetch){
 	};
 close RESULT;
 
-#print $dbi->last_sql;
 }
 
 sub UpdateProductItem(){
@@ -439,8 +459,8 @@ if($_[0]){
 	$id = $_[0];
 }else{
 
-	say 'Enter product ID: ';
-	$id=<STDIN>;
+	say 'Enter product ID[0 - for all]: ';
+	$id = <STDIN>;
 }
 
 my $result = '';
