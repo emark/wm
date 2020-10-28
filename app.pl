@@ -101,7 +101,7 @@ sub SelectCmd(){
 	say "\nPlease, select command:";
 	my $n = 0;
 	foreach my $key (@commands){
-		say "\t[$n] - $key";
+		say "\t[$n]\t- $key";
 		$n++;
 	};
 	print "\nEnter number: ";
@@ -142,13 +142,13 @@ sub UpdateCatalog(){
 
 	say 'Done';
 
-	my $result=$dbi->select(
+	my $result = $dbi->select(
 		['id','link'],
 		table => 'prod',
 		where => { status => 3 },
 	);
 	
-	while(my $row=$result->fetch_hash){
+	while(my $row = $result->fetch_hash){
 		print "Updating product price: $n/".@id." ID [$row->{'id'}]: ";
 		&UpdateProductPrice($row->{'id'},$row->{'link'});
 		$n++;
@@ -220,13 +220,11 @@ sub ParseProductCard(){
 	my %prod = ();
 	$prod{'link'} = $link;
 
-
-	#for my $c($tx->find('div.model-header > div.title')->each){
 	for my $c($tx->find('h1')->each){
 
 		my $caption = $c->text;
-		utf8::encode $caption;	
 		$prod{'caption'}= $caption;
+		utf8::encode $caption;	
 	};
 
 	my $l = ($tx->find('div.p__displayedItem__images__big a')->first);
@@ -237,7 +235,16 @@ sub ParseProductCard(){
 	if ($l){
 		$prod{'price'}=$l->all_text;
 		$prod{'price'}=~s/\s+|\₽//g;
+
 	};
+
+	$l = ($tx->find('div.descr__techicalBrand__info')->first);
+	if ($l){
+		$prod{'brand'}=$l->all_text;
+		$prod{'brand'}=~s/Все товары //g;
+		utf8::encode $prod{'brand'}; 
+	};
+
 
 	for my $prop($tx->find('div.descriptionText_cover p')->each){
 		$prod{'descripion'} = $prop->text;
@@ -272,6 +279,7 @@ sub ParseProductCard(){
 	$prod{'count'} = 0;	
 	for my $offers($tx->find('span.catalog__displayedItem__availabilityCount > label')->each){
 		$prod{'count'} = $offers->text;#More than one offer
+		utf8::encode $prod{'count'};
 	};
 
 #Development: see product parameters 
@@ -317,6 +325,7 @@ sub UpdateProductPrice(){
 				caption => $prod{'caption'},
 				image => $prod{'image'},
 				price => $prod{'price'},
+				brand => $prod{'brand'},
 				description => $prod{'prop'},
 				count => $prod{'count'},
 				status => 0,
