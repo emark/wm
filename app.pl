@@ -11,7 +11,7 @@ use v5.10;
 use DBIx::Custom;
 use File::Copy;
 
-my $VERSION = '0.9.2';
+my $VERSION = '0.9.3';
 my $dev = 0;
 
 my $dbi = DBIx::Custom->connect(dsn=>"dbi:SQLite:dbname=db/database");
@@ -35,7 +35,7 @@ my @commands = (
 	'Download and copy products images',
 	'Parsing by ID',
 	'Update product image (new source)',
-	'Update product image (new sorce) from list',
+	'Update product image (new source) from list',
 	'Export all data',
 	'Export status of products',
 );
@@ -54,8 +54,8 @@ do {
 	
 	} elsif ($cmd == 2){
 		&GetNewProduct;
-		&DownloadProductImage;
-		&CopyProductImage;
+		#&DownloadProductImage;
+		#&CopyProductImage;
 	
 	} elsif ($cmd == 3){
 		&UpdateCatalog;
@@ -215,7 +215,7 @@ sub GetNewProduct(){
 sub ParseProductCard(){
 
 	my $link =$_[0];
-	$tx = $ua->max_redirects(5)->get($link=>{DNT=>1})->res->dom;
+	$tx = $ua->max_redirects(10)->get($link=>{DNT=>1, Accept => '*/*'})->res->dom;
 
 	my %prod = ();
 	$prod{'link'} = $link;
@@ -227,7 +227,7 @@ sub ParseProductCard(){
 		utf8::encode $caption;	
 	};
 
-	my $l = ($tx->find('div.p__displayedItem__images__big a')->first);
+	my $l = ($tx->find('div.productPage__displayedItem__images__big a')->first);
 	$prod{'image'} = $tx->all_text;
 	$prod{'image'} = $l->attr('href');
 	
@@ -425,7 +425,7 @@ sub ExportData(){
 	foreach my $header (@{$result->header}){
 		print FILE $header.'@';
 	};
-	print FILE "=ROUND(G1*1.6,0)\n";
+	print FILE "=ROUND(G1*(IF(G1<5500;1,6;1,45));0)\n";
 
 	while (my $row = $result->fetch){
 		foreach my $i (@{$row}){
